@@ -60,7 +60,7 @@ while(numVids < 3):
       		maxResults=50,
       		q=randId,
       		type='',
-          relevanceLanguage = 'in')
+          regionCode = 'US')
 
   for vid in result['items']:
     if 'videoId' in vid['id'].keys():
