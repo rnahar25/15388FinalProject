@@ -49,12 +49,12 @@ def getRandomId():
 	return videoId
 
 client = get_authenticated_service()
-f = open("rand_videos.txt","w+")
+f = open("rand_videos.txt","a+")
 translator = Translator()
 
 numVids = 0
 search_videos = []
-while(numVids < 3):
+while(numVids < 5000):
   randId = getRandomId()
   result = search_list_by_keyword(client,
       		part='snippet',
@@ -64,14 +64,16 @@ while(numVids < 3):
           regionCode = 'US')
 
   for vid in result['items']:
-    if 'videoId' in vid['id'].keys():
+    vidIds = vid['id'].keys()
+    if 'videoId' in vidIds:
       try:
-        lang = translator.detect(vid['snippet']['title'])
-        print("trying title", vid['snippet']['title'])
-        if (vid['id']['videoId'][:videoIdLen]) == randId and (lang.lang == 'en' and lang.confidence > 0.50):
-          search_videos.append(vid['id']['videoId'])
-          # print(vid['id']['videoId'])
-          numVids += 1
+        if (vid['id']['videoId'][:videoIdLen]) == randId:
+          lang = translator.detect(vid['snippet']['title'])
+          if (lang.lang == 'en' and lang.confidence > 0.50):
+            search_videos.append(vid['id']['videoId'])
+            # print(vid['id']['videoId'])
+            numVids += 1
+            if numVids == 5000: break
       except:
         pass
   video_ids = ','.join(search_videos)
