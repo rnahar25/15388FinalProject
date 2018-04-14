@@ -1,4 +1,5 @@
 from googleapiclient.discovery import build
+from googletrans import Translator
 import random
 import string
 import json
@@ -40,7 +41,7 @@ def search_list_by_keyword(client, **kwargs):
 
 
 def get_authenticated_service():
-	api_key = 'AIzaSyAvTpcReN0T7ID4OAkxbOLvC1FeoFS_SQg'
+	api_key = open('api_key.txt', 'r').read()
 	return build('youtube', 'v3', developerKey = api_key)
 
 def getRandomId():
@@ -49,7 +50,8 @@ def getRandomId():
 	return videoId
 
 client = get_authenticated_service()
-#f = open("surfind_videos.txt","w+")
+f = open("rand_videos.txt","w+")
+translator = Translator()
 
 numVids = 0
 search_videos = []
@@ -64,10 +66,15 @@ while(numVids < 3):
 
   for vid in result['items']:
     if 'videoId' in vid['id'].keys():
-      if (vid['id']['videoId'][:videoIdLen]) == randId:
-        search_videos.append(vid['id']['videoId'])
-        print(vid['id']['videoId'])
-        numVids += 1
+      try:
+        lang = translator.detect(vid['snippet']['title'])
+        print("trying title", vid['snippet']['title'])
+        if (vid['id']['videoId'][:videoIdLen]) == randId and (lang.lang == 'en' and lang.confidence > 0.50):
+          search_videos.append(vid['id']['videoId'])
+          # print(vid['id']['videoId'])
+          numVids += 1
+      except:
+        pass
   video_ids = ','.join(search_videos)
 # print("BLAH")
 # print(search_videos)
@@ -75,9 +82,10 @@ while(numVids < 3):
 video_response = videos_list_by_id(client,
   id=video_ids,
   part='snippet, statistics')
-
-print(video_response)
+f.write(json.dumps(video_response))
+# print(translator.detect('coco'))
+# print(video_response)
 		
 	#print(type(result))
 	#f.write(json.dumps(result))
-#f.close()
+f.close()
