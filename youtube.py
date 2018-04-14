@@ -38,10 +38,10 @@ def search_list_by_keyword(client, **kwargs):
   return response
 
 
-
 def get_authenticated_service():
-	api_key = 'AIzaSyAvTpcReN0T7ID4OAkxbOLvC1FeoFS_SQg'
-	return build('youtube', 'v3', developerKey = api_key)
+  fh = open("api_key.txt","r") 
+  api_key = fh.read()
+  return build('youtube', 'v3', developerKey = api_key)
 
 def getRandomId():
 	videoId = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(videoIdLen)])
