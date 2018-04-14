@@ -39,7 +39,6 @@ def search_list_by_keyword(client, **kwargs):
   return response
 
 
-
 def get_authenticated_service():
 	api_key = open('api_key.txt', 'r').read()
 	return build('youtube', 'v3', developerKey = api_key)
@@ -62,7 +61,7 @@ while(numVids < 3):
       		maxResults=50,
       		q=randId,
       		type='',
-          relevanceLanguage = 'in')
+          regionCode = 'US')
 
   for vid in result['items']:
     if 'videoId' in vid['id'].keys():
