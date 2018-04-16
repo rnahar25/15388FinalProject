@@ -53,6 +53,7 @@ def getRandomId():
 
 client = get_authenticated_service()
 f = open("rand_videos.txt","a")
+f2 = open("word_set.txt","a")
 translator = Translator()
 
 numVids = 0
@@ -62,6 +63,8 @@ while(numVids < numVideos):
   word = rw.random_word()
   while (word in allWords):
     word = rw.random_word()
+  f2.write(word)
+  f2.write('\n')
   allWords.add(word) 
   randId = getRandomId()
   result = search_list_by_keyword(client,
@@ -76,7 +79,7 @@ while(numVids < numVideos):
   try:
     #if (vid['id']['videoId'][:videoIdLen]) == randId:
     lang = translator.detect(vid['snippet']['title'])
-    print("trying title", vid['snippet']['title'], lang.lang, lang.confidence > 0.50)
+    #print("trying title", vid['snippet']['title'], lang.lang, lang.confidence > 0.50)
     if lang.lang == 'en' and lang.confidence > 0.50:
       # search_videos.append(vid['id']['videoId'])
       # print(vid['id']['videoId'])
@@ -98,3 +101,4 @@ while(numVids < numVideos):
 	#print(type(result))
 	#f.write(json.dumps(result))
 f.close()
+f2.close()
