@@ -5,7 +5,8 @@ import string
 import json
 
 global videoIdLen
-videoIdLen = 5
+videoIdLen = 2
+numVideos = 3
 
 def remove_empty_kwargs(**kwargs):
   good_kwargs = {}
@@ -49,16 +50,16 @@ def getRandomId():
 	return videoId
 
 client = get_authenticated_service()
-f = open("rand_videos.txt","w+")
+f = open("rand_videos.txt","a")
 translator = Translator()
 
 numVids = 0
-search_videos = []
-while(numVids < 3):
+# search_videos = []
+while(numVids < numVideos):
   randId = getRandomId()
   result = search_list_by_keyword(client,
       		part='snippet',
-      		maxResults=50,
+      		maxResults=10,
       		q=randId,
       		type='',
           regionCode = 'US')
@@ -66,22 +67,26 @@ while(numVids < 3):
   for vid in result['items']:
     if 'videoId' in vid['id'].keys():
       try:
-        lang = translator.detect(vid['snippet']['title'])
-        print("trying title", vid['snippet']['title'])
-        if (vid['id']['videoId'][:videoIdLen]) == randId and (lang.lang == 'en' and lang.confidence > 0.50):
-          search_videos.append(vid['id']['videoId'])
-          # print(vid['id']['videoId'])
-          numVids += 1
+        if (vid['id']['videoId'][:videoIdLen]) == randId:
+          lang = translator.detect(vid['snippet']['title'])
+          print("trying title", vid['snippet']['title'], lang.lang, lang.confidence > 0.50)
+          if lang.lang == 'en' and lang.confidence > 0.50:
+            # search_videos.append(vid['id']['videoId'])
+            # print(vid['id']['videoId'])
+            video_response = videos_list_by_id(client,
+              id=vid['id']['videoId'],
+              part='snippet, statistics')
+            f.write(json.dumps(video_response['items'][0]))
+            f.write('\n')
+            numVids += 1
+          if numVids == numVideos:
+            break
       except:
         pass
-  video_ids = ','.join(search_videos)
+  # video_ids = ','.join(search_videos)
 # print("BLAH")
 # print(search_videos)
 # print(video_ids)
-video_response = videos_list_by_id(client,
-  id=video_ids,
-  part='snippet, statistics')
-f.write(json.dumps(video_response))
 # print(translator.detect('coco'))
 # print(video_response)
 		
