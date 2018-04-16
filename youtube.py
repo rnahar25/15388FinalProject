@@ -65,7 +65,8 @@ while(numVids < numVideos):
           regionCode = 'US')
 
   for vid in result['items']:
-    if 'videoId' in vid['id'].keys():
+    vidIds = vid['id'].keys()
+    if 'videoId' in vidIds:
       try:
         if (vid['id']['videoId'][:videoIdLen]) == randId:
           lang = translator.detect(vid['snippet']['title'])
