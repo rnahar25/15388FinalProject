@@ -3,9 +3,11 @@ from googletrans import Translator
 import random
 import string
 import json
+from random_words import RandomWords
 
+rw = RandomWords()
 global videoIdLen
-videoIdLen = 2
+videoIdLen = 3
 numVideos = 3
 
 def remove_empty_kwargs(**kwargs):
@@ -55,35 +57,37 @@ translator = Translator()
 
 numVids = 0
 # search_videos = []
+allWords = set()
 while(numVids < numVideos):
+  word = rw.random_word()
+  while (word in allWords):
+    word = rw.random_word()
+  allWords.add(word) 
   randId = getRandomId()
   result = search_list_by_keyword(client,
       		part='snippet',
-      		maxResults=10,
-      		q=randId,
+      		maxResults=1,
+      		#q=randId,
+          q=word,
       		type='',
           regionCode = 'US')
 
-  for vid in result['items']:
-    vidIds = vid['id'].keys()
-    if 'videoId' in vidIds:
-      try:
-        if (vid['id']['videoId'][:videoIdLen]) == randId:
-          lang = translator.detect(vid['snippet']['title'])
-          print("trying title", vid['snippet']['title'], lang.lang, lang.confidence > 0.50)
-          if lang.lang == 'en' and lang.confidence > 0.50:
-            # search_videos.append(vid['id']['videoId'])
-            # print(vid['id']['videoId'])
-            video_response = videos_list_by_id(client,
-              id=vid['id']['videoId'],
-              part='snippet, statistics')
-            f.write(json.dumps(video_response['items'][0]))
-            f.write('\n')
-            numVids += 1
-          if numVids == numVideos:
-            break
-      except:
-        pass
+  vid = result['items'][0]
+  try:
+    #if (vid['id']['videoId'][:videoIdLen]) == randId:
+    lang = translator.detect(vid['snippet']['title'])
+    print("trying title", vid['snippet']['title'], lang.lang, lang.confidence > 0.50)
+    if lang.lang == 'en' and lang.confidence > 0.50:
+      # search_videos.append(vid['id']['videoId'])
+      # print(vid['id']['videoId'])
+      video_response = videos_list_by_id(client,
+        id=vid['id']['videoId'],
+        part='snippet, statistics')
+      f.write(json.dumps(video_response['items'][0]))
+      f.write('\n')
+      numVids += 1
+  except:
+    pass
   # video_ids = ','.join(search_videos)
 # print("BLAH")
 # print(search_videos)
