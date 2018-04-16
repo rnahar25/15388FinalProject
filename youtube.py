@@ -53,36 +53,38 @@ def getRandomId():
 
 client = get_authenticated_service()
 f = open("rand_videos.txt","a")
+allWords = set()
+
+#initialize allWords
+f3 = open("word_set.txt", "r")
+lines = f3.readlines()
+for line in lines:
+	allWords.add(line.strip())
+f3.close()
+
 f2 = open("word_set.txt","a")
 translator = Translator()
-
 numVids = 0
-# search_videos = []
-allWords = set()
+
 while(numVids < numVideos):
+  #get a random word
   word = rw.random_word()
   while (word in allWords):
     word = rw.random_word()
   f2.write(word)
   f2.write('\n')
   allWords.add(word) 
-  randId = getRandomId()
   result = search_list_by_keyword(client,
       		part='snippet',
       		maxResults=1,
-      		#q=randId,
-          q=word,
+            q=word,
       		type='',
           regionCode = 'US')
 
   vid = result['items'][0]
   try:
-    #if (vid['id']['videoId'][:videoIdLen]) == randId:
     lang = translator.detect(vid['snippet']['title'])
-    #print("trying title", vid['snippet']['title'], lang.lang, lang.confidence > 0.50)
     if lang.lang == 'en' and lang.confidence > 0.50:
-      # search_videos.append(vid['id']['videoId'])
-      # print(vid['id']['videoId'])
       video_response = videos_list_by_id(client,
         id=vid['id']['videoId'],
         part='snippet, statistics')
@@ -91,14 +93,6 @@ while(numVids < numVideos):
       numVids += 1
   except:
     pass
-  # video_ids = ','.join(search_videos)
-# print("BLAH")
-# print(search_videos)
-# print(video_ids)
-# print(translator.detect('coco'))
-# print(video_response)
-		
-	#print(type(result))
-	#f.write(json.dumps(result))
 f.close()
 f2.close()
+
