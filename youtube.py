@@ -61,8 +61,8 @@ for line in f_ids:
 	result = videos_list_by_id(client,
 		id = vidId,
 		part = 'snippet, statistics')
-	lang = translator.detect(vid['snippet']['title'])
 	try:
+		lang = translator.detect(vid['snippet']['title'])
 	    if lang.lang == 'en' and lang.confidence > 0.50:
 	    	f.write(json.dumps(video_response['items'][0]))
 	    	f.write('\n')
