@@ -3,9 +3,8 @@ from googletrans import Translator
 import random
 import string
 import json
-from random_words import RandomWords
+import csv
 
-rw = RandomWords()
 global videoIdLen
 videoIdLen = 3
 numVideos = 3
@@ -43,32 +42,67 @@ def search_list_by_keyword(client, **kwargs):
 
 
 def get_authenticated_service():
-	api_key = open('api_key.txt', 'r').read()
-	return build('youtube', 'v3', developerKey = api_key)
+    api_key = open('api_key.txt', 'r').read()
+    return build('youtube', 'v3', developerKey = api_key)
 
 def getRandomId():
-	videoId = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(videoIdLen)])
-	#print(videoId)
-	return videoId
+    videoId = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(videoIdLen)])
+    #print(videoId)
+    return videoId
+
+def checkField(vid, fieldType, first, second):
+    if (second in vid[first]):
+        return vid[first][second]
+    else:
+        if (fieldType == "str"):
+            return ""
+        elif (fieldType == "int"):
+            return 0
+        else:
+            return []
 
 client = get_authenticated_service()
 f = open("rand_videos.txt","a")
+translator = Translator()
+csv_file = open('video_data.csv', 'w', newline = "", encoding='utf-8')
+fieldnames = ['id', 'title', 'description', 'channelTitle', 'commentCount', 'viewCount', 'favoriteCount', 'dislikeCount', 'likeCount', 'tags']
+writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+writer.writeheader()
 
-f_ids = open("ids.txt", "r")
+f_ids = open("videoIdsAndLabels.txt", "r")
 
 for line in f_ids:
-	vidId = line.split()[0]
-	result = videos_list_by_id(client,
-		id = vidId,
-		part = 'snippet, statistics')
-	try:
-		lang = translator.detect(vid['snippet']['title'])
-	    if lang.lang == 'en' and lang.confidence > 0.50:
-	    	f.write(json.dumps(video_response['items'][0]))
-	    	f.write('\n')
-	except:
-		pass
+    vidId = line.split()[0]
+    video_response = videos_list_by_id(client,
+        id = vidId,
+        part = 'snippet, statistics')
+    newVideo = {}
+    try:  
+        if (len(video_response['items']) == 0):
+            continue
+        vid = video_response['items'][0]
+        title = vid['snippet']['title']
+        lang = translator.detect(title)
+        if lang.lang == 'en' and lang.confidence > 0.50:
+            newVideo['id'] = vidId
+            newVideo['title'] = title 
+            newVideo['description'] = checkField(vid, "str", "snippet", "description")
+            newVideo['channelTitle'] = checkField(vid, "str", "snippet", "channelTitle")
+            newVideo['commentCount'] = checkField(vid, "int", "statistics", "commentCount")
+            newVideo['viewCount'] = checkField(vid, "int", "statistics", "viewCount")
+            newVideo['favoriteCount'] = checkField(vid, "int", "statistics", "favoriteCount")
+            newVideo['dislikeCount'] = checkField(vid, "int", "statistics", "dislikeCount")
+            newVideo['likeCount'] = checkField(vid, "int", "statistics", "likeCount")
+            newVideo['tags'] = checkField(vid, "list", "snippet", "tags")
+            writer.writerow(newVideo)
+            f.write(json.dumps(vid))
+            f.write('\n')
+    except Exception as e:
+        print("in except")
+        print(e)
+        print(newVideo)
 
 f.close()
 f_ids.close()
+csv_file.close()
 
