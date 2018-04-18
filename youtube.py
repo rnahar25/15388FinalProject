@@ -4,6 +4,7 @@ import random
 import string
 import json
 from random_words import RandomWords
+import pandas as pd
 
 rw = RandomWords()
 global videoIdLen
@@ -43,31 +44,45 @@ def search_list_by_keyword(client, **kwargs):
 
 
 def get_authenticated_service():
-	api_key = open('api_key.txt', 'r').read()
-	return build('youtube', 'v3', developerKey = api_key)
+  api_key = open('api_key.txt', 'r').read()
+  return build('youtube', 'v3', developerKey = api_key)
 
 def getRandomId():
-	videoId = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(videoIdLen)])
-	#print(videoId)
-	return videoId
+  videoId = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(videoIdLen)])
+  #print(videoId)
+  return videoId
 
 client = get_authenticated_service()
-f = open("rand_videos.txt","a")
-
-f_ids = open("ids.txt", "r")
+f = open("rand_videos.csv","w+")
+f_ids = open("sample_ids.txt", "r")  # <-- Change this!
+vocab = pd.read_csv("vocabulary.csv")
+translator = Translator()
 
 for line in f_ids:
-	vidId = line.split()[0]
-	result = videos_list_by_id(client,
-		id = vidId,
-		part = 'snippet, statistics')
-	try:
-		lang = translator.detect(vid['snippet']['title'])
-	    if lang.lang == 'en' and lang.confidence > 0.50:
-	    	f.write(json.dumps(video_response['items'][0]))
-	    	f.write('\n')
-	except:
-		pass
+  parts = line.split()
+  vidId = parts[0]
+  labels = parts[1:]
+  video_response = videos_list_by_id(client,
+    id = vidId,
+    part = 'snippet, statistics')['items'][0]
+  # print(video_response)
+  try:
+    title = video_response['snippet']['title']
+    # print(title)
+    lang = translator.detect(title)
+    # print(lang.lang, lang.confidence)
+    if lang.lang == 'en' and lang.confidence > 0.50:
+      # print("Writing to file")
+      # f.write(json.dumps(video_response))  <-- Change this!
+      for label in labels:
+        label_fix = label.replace('[','').replace(']','').replace(',','')
+        # print(label_fix)
+        topic = vocab['Name'][int(label_fix)]
+        # print(topic)
+        f.write(','+ topic)
+      f.write('\n')
+  except:
+    pass
 
 f.close()
 f_ids.close()
