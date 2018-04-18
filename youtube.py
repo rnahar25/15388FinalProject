@@ -4,6 +4,7 @@ import random
 import string
 import json
 import csv
+import pandas as pd
 
 global videoIdLen
 videoIdLen = 3
@@ -65,14 +66,18 @@ client = get_authenticated_service()
 f = open("rand_videos.txt","a")
 translator = Translator()
 csv_file = open('video_data.csv', 'w', newline = "", encoding='utf-8')
-fieldnames = ['id', 'title', 'description', 'channelTitle', 'commentCount', 'viewCount', 'favoriteCount', 'dislikeCount', 'likeCount', 'tags']
+fieldnames = ['id', 'title', 'description', 'channelTitle', 'commentCount', 'viewCount', 'favoriteCount', 'dislikeCount', 'likeCount', 'tags', 'topics']
 writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 writer.writeheader()
 
 f_ids = open("videoIdsAndLabels.txt", "r")
+vocab = pd.read_csv("vocabulary.csv")
 
 for line in f_ids:
-    vidId = line.split()[0]
+    parts = line.split()
+    vidId = parts[0]
+    labels = parts[1:]
+    
     video_response = videos_list_by_id(client,
         id = vidId,
         part = 'snippet, statistics')
@@ -84,6 +89,12 @@ for line in f_ids:
         title = vid['snippet']['title']
         lang = translator.detect(title)
         if lang.lang == 'en' and lang.confidence > 0.50:
+            topics = []
+            for label in labels:
+                label_fix = label.replace('[','').replace(']','').replace(',','')
+                topic = vocab['Name'][int(label_fix)]
+                topics.append(topic)
+            newVideo['topics'] = topics
             newVideo['id'] = vidId
             newVideo['title'] = title 
             newVideo['description'] = checkField(vid, "str", "snippet", "description")
