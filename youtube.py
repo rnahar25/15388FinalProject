@@ -53,46 +53,22 @@ def getRandomId():
 
 client = get_authenticated_service()
 f = open("rand_videos.txt","a")
-allWords = set()
 
-#initialize allWords
-f3 = open("word_set.txt", "r")
-lines = f3.readlines()
-for line in lines:
-	allWords.add(line.strip())
-f3.close()
+f_ids = open("ids.txt", "r")
 
-f2 = open("word_set.txt","a")
-translator = Translator()
-numVids = 0
+for line in f_ids:
+	vidId = line.split()[0]
+	result = videos_list_by_id(client,
+		id = vidId,
+		part = 'snippet, statistics')
+	lang = translator.detect(vid['snippet']['title'])
+	try:
+	    if lang.lang == 'en' and lang.confidence > 0.50:
+	    	f.write(json.dumps(video_response['items'][0]))
+	    	f.write('\n')
+	except:
+		pass
 
-while(numVids < numVideos):
-  #get a random word
-  word = rw.random_word()
-  while (word in allWords):
-    word = rw.random_word()
-  f2.write(word)
-  f2.write('\n')
-  allWords.add(word) 
-  result = search_list_by_keyword(client,
-      		part='snippet',
-      		maxResults=1,
-            q=word,
-      		type='',
-          regionCode = 'US')
-
-  vid = result['items'][0]
-  try:
-    lang = translator.detect(vid['snippet']['title'])
-    if lang.lang == 'en' and lang.confidence > 0.50:
-      video_response = videos_list_by_id(client,
-        id=vid['id']['videoId'],
-        part='snippet, statistics')
-      f.write(json.dumps(video_response['items'][0]))
-      f.write('\n')
-      numVids += 1
-  except:
-    pass
 f.close()
-f2.close()
+f_ids.close()
 
