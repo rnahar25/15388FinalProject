@@ -5,7 +5,7 @@ import random
 
 f = open("videoIdsAndLabels.txt","a")
 
-path = "youtube_data/*.tfrecord"
+path = "data/*.tfrecord"
 for filename in glob.glob(path):
   tfrecords_filename = filename
   opts = tf.python_io.TFRecordOptions(tf.python_io.TFRecordCompressionType.NONE)
